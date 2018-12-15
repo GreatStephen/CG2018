@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Our Computer Graphic final project</title>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%
+        }
+    </style>
+</head>
+
+<body>
+<div id="canvas-frame"></div>
+</body>
+
+<!--scripts-->
+<script src="js/three.min.js"></script>
+<script src="js/stats.min.js"></script>
+<script>
+    // global
+    let scene = new THREE.Scene()
+        , camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 1000)
+        , renderer = new THREE.WebGLRenderer();
+    document.getElementById('canvas-frame').appendChild(renderer.domElement);
+    let agentPosition = new THREE.Vector3(0, 0.6, 1)
+        , agentPosture = new THREE.Vector3(1, 0, 0);
+
+
+    main();
+
+    function main() {
+        // initial state
+        camera.position.set(10, 10, 10);
+        camera.lookAt(new THREE.Vector3(0, 0, 0));
+        resize();
+        // build scene
+        addCube(10, 1, 10, 0xff0000);
+        let cube = addCube(1, 1, 1, 0x00ff00, function () {
+            this.rotation.x += 0.01;
+            this.rotation.y += 0.01;
+            this.rotation.z += 0.01;
+        });
+        cube.position.set(0, 1, 0);
+        addLine();
+        addLight();
+        // events
+        renderer.domElement.addEventListener('dblclick', onCanvasDoubleClick, false);
+        document.addEventListener("webkitfullscreenchange", onFullscreenChange, false);
+        window.addEventListener("resize", resize, false);
+        document.addEventListener("keypress", onKeyPress, false);
+        // start display
+        animate();
+    }
+
+    function resize() {
+        // camera
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        // renderer
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function animate() {
+        scene.traverse(function (obj) {
+            if (obj.animate) {
+                obj.animate();
+            }
+        });
+
+        renderer.render(scene, camera);
+        requestAnimationFrame(animate);
+    }
+
+    // respond to keyboard and mouse
+    function onMouseMove(event) {
+        const target = new THREE.Vector3(camera.position.x + event.clientX / window.innerWidth - 0.5,
+            camera.position.y - event.clientY / window.innerHeight + 0.5,
+            camera.position.z - 0.5);
+        camera.lookAt(target);
+    }
+
+    function onKeyPress(event) {
+        switch (event.key) {
+            case 'w':
+                agentPosition.z -= 0.1;
+                break;
+            case 's':
+                agentPosition.z += 0.1;
+                break;
+            case 'a':
+                agentPosition.x -= 0.1;
+                break;
+            case 'd':
+                agentPosition.x += 0.1;
+                break;
+            case 'q':
+                agentPosture.applyAxisAngle(new THREE.Vector3(0, 1, 0), 0.0314);
+                break;
+            case 'e':
+                agentPosture.applyAxisAngle(new THREE.Vector3(0, 1, 0), -0.0314);
+                break;
+            default:
+                break;
+        }
+        camera.position.set(agentPosition.x, agentPosition.y, agentPosition.z);
+        camera.lookAt(agentPosition + agentPosture);
+    }
+
+    function onCanvasDoubleClick(event) {
+        event.currentTarget.requestPointerLock();
+        event.currentTarget.webkitRequestFullscreen();
+    }
+
+    function onFullscreenChange(event) {
+        resize();
+        if (!document.webkitIsFullScreen) {
+            document.exitPointerLock();
+            camera.position.set(10, 10, 10);
+            camera.lookAt(new THREE.Vector3(0, 0, 0));
+            document.removeEventListener("mousemove", onMouseMove);
+        } else {
+            camera.position.set(agentPosition.x, agentPosition.y, agentPosition.z);
+            camera.lookAt(agentPosition + agentPosture);
+            document.addEventListener("mousemove", onMouseMove, false);
+        }
+    }
+
+    // basic function for adding objects
+    function addCube(width = 1, height = 1, depth = 1, color = 0x00ff00, animateFunc) {
+        const geom = new THREE.CubeGeometry(width, height, depth);
+        const mat = new THREE.MeshLambertMaterial({color: color});
+        const cube = new THREE.Mesh(geom, mat);
+        cube.animate = animateFunc;
+        scene.add(cube);
+        return cube;
+    }
+
+    function addLine() {
+        const geometry = new THREE.Geometry();
+        const p1 = new THREE.Vector3(0, 0, 0);
+        const p2 = new THREE.Vector3(0, 1, 0);
+        geometry.vertices.push(p1, p2);
+        const material = new THREE.LineBasicMaterial({color: 0x0000ff});
+        const line = new THREE.Line(geometry, material);
+        // line.animate = function () {
+        //     this.position.set(agentPosition);
+        //     this.rotation.set(agentPosture);
+        // };
+        scene.add(line);
+        return line;
+    }
+
+    function addLight() {
+        const light = new THREE.PointLight(0xffffff, 1, 0, 2);
+        light.position.set(1, 5, 1);
+        scene.add(light);
+        return light;
+    }
+
+</script>
+</html>
