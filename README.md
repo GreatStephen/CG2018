@@ -41,6 +41,12 @@ Controls in fullscreen mode are listed below.
 * add a door to the scene
 
     There still exist a problem with texture.
+    
+* add texture to the door
+
+    Instead of OBJLoader, we use OBJLoader2 which can load materials from *.mtl files
+    
+* add ambient light for better performance
 
 ## TODO
 
