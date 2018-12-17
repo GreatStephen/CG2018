@@ -23,7 +23,9 @@
 <script src="js/three.js"></script>
 <script src="js/controls/OrbitControls.js"></script>
 <script src="js/controls/PointerLockControls.js"></script>
+<script src="js/loaders/LoaderSupport.js"></script>
 <script src="js/loaders/OBJLoader.js"></script>
+<script src="js/loaders/OBJLoader2.js"></script>
 <script>
     // global
     let scene = new THREE.Scene(),
@@ -106,7 +108,7 @@
         scene.add(cube);
 
         // the man to be controlled
-        let man = loadSoldier();
+        let man = loadMan();
         man.scale.x = 0.1;
         man.scale.y = 0.1;
         man.scale.z = 0.1;
@@ -115,6 +117,15 @@
         man.layers.mask = 0xffffffff;
         man.layers.disable(1);
         FPControl.getObject().add(man);
+
+        // door
+        let door = loadDoor();
+        door.layers.mask = 0xffffffff;
+        door.translateY(0);
+        scene.add(door);
+        door.scale.x = 10;
+        door.scale.y = 10;
+        door.scale.z = 10;
 
         // light
         light = newLight();
@@ -263,7 +274,9 @@
     function newCube(width = 1, height = 1, depth = 1, color = 0x00ff00) {
         const geom = new THREE.CubeGeometry(width, height, depth);
         const mat = new THREE.MeshLambertMaterial({color: color});
-        return new THREE.Mesh(geom, mat);
+        const cube = new THREE.Mesh(geom, mat);
+        cube.name = "cube";
+        return cube;
     }
 
     function newFloor() {
@@ -291,19 +304,23 @@
         }
         floorGeometry.addAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
         let floorMaterial = new THREE.MeshBasicMaterial({vertexColors: THREE.VertexColors});
-        return new THREE.Mesh(floorGeometry, floorMaterial);
+        const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+        floor.name = "floor";
+        return floor;
     }
 
     function newLight() {
-        return new THREE.PointLight(0xffffff, 1, 0, 2);
+        const light =  new THREE.PointLight(0xffffff, 1, 0, 2);
+        light.name = "light";
+        return light;
     }
 
-    function loadSoldier() {
-        let group = new THREE.Group();
+    function loadMan() {
+        let man = new THREE.Object3D();
         let loader = new THREE.OBJLoader();
         loader.load("model/male02.obj",
             (object) => {
-                group.add(object);
+                man.add(object);
             },
             (xhr) => {
                 console.log((xhr.loaded / xhr.total * 100) + '% loaded');
@@ -311,7 +328,42 @@
             (error) => {
                 console.log('An error happened');
             });
-        return group;
+        man.name = "man";
+        return man;
+    }
+
+    function loadDoor() {
+        let door = new THREE.Object3D();
+        let texture = new THREE.TextureLoader().load('model/Room-Door/textures/Door_C.jpg');
+        //scene.add(texture);
+        let Loader = new THREE.OBJLoader();
+        Loader.load('model/Room-Door/Door_Component_BI3.obj',
+            (object) => {
+                object.traverse(function (child) {
+                    child.layers.mask = 0xffffffff;
+                    child.visible = true;
+                    if(child.isMesh) {
+                        if (Array.isArray(child.material)) {
+                            for (let material of child.material) {
+                                material.map = texture;
+                                material.map.needsUpdate = true;
+                            }
+                        } else {
+                            child.material.map = texture;
+                            child.material.map.needsUpdate = true;
+                        }
+                    }
+                });
+                door.add(object);
+            },
+            (xhr) => {
+                console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+            },
+            (error) => {
+                console.log('An error happened');
+            });
+        door.name = "door";
+        return door;
     }
 
 </script>

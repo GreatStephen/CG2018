@@ -1,6 +1,6 @@
 # Computer Graphic
 
-Aim to finish a Minecraft-like game with 3.js. It is designed to have two modes. In the fullscreen mode, the agent uses a first-person perspective but cannot modify all the blocks. In the window mode, the agent uses a third-person perspective and can add, delete and modify the blocks.
+Aim to finish a Minecraft-like game with 3.js. It is designed to have two modes. In the fullscreen mode, the agent uses a first-person perspective but cannot modify any blocks. In the window mode, the agent uses a third-person perspective and can add, delete and modify the blocks.
 
 ## Functions
 
@@ -35,6 +35,12 @@ Controls in fullscreen mode are listed below.
 * finish the basic movement control for the two modes
 
     One remaining problem is that the CG.html cannot be opened directly with Chrome because the **CORS** policy prevents the html from loading models locally. The solution I used this afternoon is to run the webpage in WebStorm, which can ignore the **CORS** policy. Another solution is to use a server or something like that and use a url like [http://127.0.0.1/modelResources](http://127.0.0.1/...).
+    
+### 2018/12/17 by Jiangeng Dong
+
+* add a door to the scene
+
+    There still exist a problem with texture.
 
 ## TODO
 
