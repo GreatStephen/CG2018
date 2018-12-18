@@ -1,7 +1,7 @@
 // global
 let scene = new THREE.Scene(),
-    FPCamera = new THREE.PerspectiveCamera(50, 1, 0.01, 1000),    // first-person camera
-    TPCamera = new THREE.PerspectiveCamera(75, 1, 0.01, 1000),   // third-person camera
+    FPCamera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.01, 1000),    // first-person camera
+    TPCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 1000),   // third-person camera
     renderer = new THREE.WebGLRenderer(),
     TPControl = new THREE.OrbitControls(TPCamera),     // third-person camera is controlled with orbit control
     FPControl = new THREE.PointerLockControls(FPCamera),   // controlled with first-person control
@@ -16,6 +16,8 @@ let moveForward = false,
     turnright = false,
     canJump = false;    // variables for movement control
 let prevTime = performance.now();
+
+let stats;
 
 
 main();
@@ -57,6 +59,13 @@ function init() {
     // elements should have name for debug
     TPCamera.name = "Third-Person Camera";
     FPCamera.name = "First-Person Camera";
+
+    // FPS counter
+    stats = new Stats();
+    stats.domElement.style.position = 'absolute';
+    stats.domElement.style.left = '0px';
+    stats.domElement.style.top = '0px';
+    document.getElementById('canvas-frame').appendChild(stats.domElement);
 }
 
 function buildScene() {
@@ -133,6 +142,8 @@ function animate() {
     moveCamera();
     renderer.render(scene, camera);
     requestAnimationFrame(animate);
+
+    stats.update();
 }
 
 function moveCamera() {
