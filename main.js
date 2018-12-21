@@ -3,7 +3,7 @@ let scene = new THREE.Scene(),
     FPCamera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.01, 1000),    // first-person camera
     TPCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 1000),   // third-person camera
     renderer = new THREE.WebGLRenderer(),
-    TPControl = new THREE.OrbitControls(TPCamera),     // third-person camera is controlled with orbit control
+    TPControl = new THREE.OrbitControls(TPCamera, document.getElementById("canvas-frame")),     // third-person camera is controlled with orbit control
     FPControl = new THREE.PointerLockControls(FPCamera),   // controlled with first-person control
     camera = TPCamera;    // camera to be displayed
 let agentVelocity = new THREE.Vector3(0, 0, 0),
@@ -18,7 +18,6 @@ let moveForward = false,
 let prevTime = performance.now();
 
 let stats;
-
 
 main();
 
@@ -125,11 +124,19 @@ function buildScene() {
 }
 
 function resize() {
-    // camera
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    // renderer
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    if (!document.webkitIsFullScreen) {
+        // camera
+        camera.aspect = 0.75 * window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        // renderer
+        renderer.setSize(0.75 * window.innerWidth, window.innerHeight);
+    } else {
+        // camera
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        // renderer
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
 }
 
 function animate() {
@@ -260,7 +267,7 @@ function onFullscreenChange(event) {
 // basic function for adding objects
 function newCube(width = 1, height = 1, depth = 1, color = 0x00ff00) {
     const geom = new THREE.CubeGeometry(width, height, depth);
-    const mat = new THREE.MeshLambertMaterial({ color: color });
+    const mat = new THREE.MeshLambertMaterial({color: color});
     const cube = new THREE.Mesh(geom, mat);
     cube.name = "cube";
     return cube;
@@ -290,7 +297,7 @@ function newFloor() {
         colors.push(color.r, color.g, color.b);
     }
     floorGeometry.addAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-    let floorMaterial = new THREE.MeshBasicMaterial({ vertexColors: THREE.VertexColors });
+    let floorMaterial = new THREE.MeshBasicMaterial({vertexColors: THREE.VertexColors});
     const floor = new THREE.Mesh(floorGeometry, floorMaterial);
     floor.name = "floor";
     return floor;
@@ -311,7 +318,7 @@ function newAmbientLight() {
 function loadMan() {
     let man = new THREE.Object3D();
     let loader = new THREE.OBJLoader();
-    loader.load("model/male02.obj",
+    loader.load("resources/model/male02.obj",
         function onLoad(object) {
             man.add(object);
         });
@@ -323,16 +330,29 @@ function loadDoor() {
     let door = new THREE.Object3D();
     //scene.add(texture);
     let Loader = new THREE.OBJLoader2();
-    Loader.loadMtl('model/Room-Door/Door_Component_BI3.mtl', null,
+    Loader.loadMtl('resources/model/Room-Door/Door_Component_BI3.mtl', null,
         function onLoadMtl(materials) {
             Loader.setMaterials(materials);
             Loader.setModelName('door');
-            Loader.load('model/Room-Door/Door_Component_BI3.obj',
+            Loader.load('resources/model/Room-Door/Door_Component_BI3.obj',
                 function onLoad(event) {
-                    event.detail.loaderRootNode.traverse((child) => { child.layers.mask = 0xffffffff; });
+                    event.detail.loaderRootNode.traverse((child) => {
+                        child.layers.mask = 0xffffffff;
+                    });
                     door.add(event.detail.loaderRootNode);
                 });
         });
     door.name = "door";
     return door;
+}
+
+function importMesh() {
+    let file = document.getElementById("file_path").files[0];
+    let obj = new THREE.Object3D();
+    let loader = new THREE.OBJLoader();
+    loader.load(URL.createObjectURL(file),
+        function onLoad(object) {
+            obj.add(object);
+        });
+    scene.add(obj);
 }

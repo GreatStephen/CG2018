@@ -48,6 +48,12 @@ Controls in fullscreen mode are listed below.
     
 * add ambient light for better performance
 
+### 2018/12/21 by Jiangeng Dong
+
+* add a side bar
+
+* realize the function of importing mesh locally
+
 ## TODO
 
 * shadows

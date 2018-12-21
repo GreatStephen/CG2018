@@ -3,9 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>Our Computer Graphic final project</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
     <style>
         body {
             margin: 0;
+            height: 100%;
+            width: 100%;
         }
 
         canvas {
@@ -16,7 +19,60 @@
 </head>
 
 <body>
-<div id="canvas-frame"></div>
+<div class="row no-gutters">
+    <div class="col-3">
+        <div class="row no-gutters">
+            <button class="card col-12 col-md-6 btn" data-toggle="modal" data-target="#importMesh">
+                <img class="img-fluid" src="resources/img/plus_sign.jpg" alt="add new model">
+            </button>
+            <div class="card col-12 col-md-6">
+                <img class="img-fluid card-img" src="resources/img/not_found.png" alt="404 not found" style="height: 100%;">
+            </div>
+        </div>
+        <hr>
+        <div class="row no-gutters">
+            <form id="property">
+                <label for="test" class="col-form-label">test</label>
+                <input type="range" class="custom-range" id="test">
+            </form>
+        </div>
+    </div>
+    <div class="col-9">
+        <div id="canvas-frame" style="position: fixed">
+
+        </div>
+    </div>
+</div>
+
+<!--a popout window for importing .obj files-->
+<div class="modal fade" id="importMesh" tabindex="-1" role="dialog" aria-labelledby="importMeshLabel"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importMeshLabel">Import Mesh</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group mb-3">
+                    <div class="custom-file">
+                        <label class="custom-file-label" for="file_path" id="file_path_label">Choose file</label>
+                        <input type="file" class="custom-file-input" id="file_path"
+                               onchange="document.getElementById('file_path_label').innerText=this.value.split('\\').pop()">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="importMesh()" data-dismiss="modal">Import
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 </body>
 
 <!--scripts-->
@@ -28,5 +84,8 @@
 <script src="js/loaders/OBJLoader2.js"></script>
 <script src="js/loaders/MTLLoader.js"></script>
 <script src="js/stats.min.js"></script>
+<script src="js/bootstrap/jquery-3.3.1.min.js"></script>
+<script src="js/bootstrap/popper.js"></script>
+<script src="js/bootstrap/bootstrap.min.js"></script>
 <script src="main.js"></script>
 </html>
