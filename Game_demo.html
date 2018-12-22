@@ -27,6 +27,9 @@
 <script src="js_src/js/loaders/OBJLoader.js"></script>
 <script src="js_src/js/loaders/OBJLoader2.js"></script>
 <script src="js_src/js/loaders/MTLLoader.js"></script>
+<script src="js_src/js/libs/dat.gui.min.js"></script>
+<script src="js_src/js/WebGL.js"></script>
+
 <script>
     // global
     let scene = new THREE.Scene(),
@@ -47,12 +50,14 @@
         canJump = false;    // variables for movement control
     let prevTime = performance.now();
 
-
-    main();
+    var speedControl = new function () {
+        this.speed = 0;
+    };
 
     function main() {
         init();
         buildScene();
+
         // keyboard and mouse events
         renderer.domElement.addEventListener('dblclick', onDoubleClick, false);
         document.addEventListener("webkitfullscreenchange", onFullscreenChange, false);
@@ -91,6 +96,9 @@
 
     function buildScene() {
 
+        var gridHelper = new THREE.GridHelper( 1000, 20 );
+        scene.add( gridHelper );
+
         var shadowMaterial = new THREE.ShadowMaterial( { color: 0x000000 } );
         shadowMaterial.opacity = 0.5;
         var groundMesh = new THREE.Mesh(
@@ -115,7 +123,10 @@
 
 
         let bed1 = Draw_Bed();
-        bed1.position.set (20, 5, 0);
+        bed1.position.set (20, 0, 0);
+        bed1.scale.x = 0.2;
+        bed1.scale.y = 0.2;
+        bed1.scale.z = 0.2;
         bed1.layers.mask = 0xffffffff;
         bed1.layers.set(1);
         scene.add(bed1);
@@ -141,9 +152,21 @@
         door.scale.z = 10;
         scene.add(door);
 
+        var fan = new Fan();
+        fan.threegroup.layers.mask = 0xffffffff;
+        fan.threegroup.scale.x = 0.1;
+        fan.threegroup.scale.y = 0.1;
+        fan.threegroup.scale.z = 0.1;
+        fan.threegroup.position.y = 10;
+        fan.threegroup.position.x = -20;
+        fan.threegroup.animate = function(){
+            fan.update();
+        };
+        scene.add(fan.threegroup);
+
         // point light
         light = newPointLight();
-        light.position.set(1, 200, 1);
+        light.position.set(-50, 20, 100);
         light.layers.mask = 0xffffffff;
         light.castShadow = true;        //Set up shadow properties for the light
         light.shadow.mapSize.width = 2048;
@@ -155,6 +178,9 @@
         // ambient light
         light = newAmbientLight();
         scene.add(light);
+
+        var gui = new dat.GUI();
+        gui.add(speedControl, 'speed',0, 0.5).name("Speed");
     }
 
     function resize() {
@@ -171,7 +197,6 @@
                 obj.animate();
             }
         });
-
         moveCamera();
         renderer.render(scene, camera);
         requestAnimationFrame(animate);
@@ -427,6 +452,143 @@
         return bed;
     }
 
+    Fan = function(){
+        this.speed = 0;
+        this.acc = 0;
+        this.wind=false;
+        this.amp=0;
+        this.greenMat = new THREE.MeshLambertMaterial({
+            color: 0x698B22,
+            shading:THREE.FlatShading
+        });
+
+        this.redMat = new THREE.MeshLambertMaterial ({
+            color: 0xad3525,
+            shading:THREE.FlatShading
+        });
+        this.greyMat = new THREE.MeshLambertMaterial ({
+            color: 0x653f4c,
+            shading:THREE.FlatShading
+        });
+
+        this.yellowMat = new THREE.MeshLambertMaterial ({
+            color: 0xfdd276,
+            shading:THREE.FlatShading
+        });
+
+        this.blueMat = new THREE.MeshLambertMaterial ({
+            color: 0x1E90FF,
+            shading:THREE.FlatShading,
+            transparent: true,
+            opacity: 0.5
+        });
+
+        var torusGeom = new THREE.TorusGeometry(11,1.5,6,15,6.3);
+        var coneGeom = new THREE.ConeGeometry(10,100,7);
+        var coreGeom = new THREE.CylinderGeometry( 10, 10, 20, 32 );
+        var sphereGeom = new THREE.BoxGeometry(10, 10, 3);
+        var propGeom = new THREE.BoxGeometry(10,30,2);
+        propGeom.applyMatrix( new THREE.Matrix4().makeTranslation( 0,25,0) );
+        var scripGeom = new THREE.BoxGeometry(30,5,2);
+        scripGeom.applyMatrix( new THREE.Matrix4().makeTranslation( 15, 0, 0 ) );
+
+        this.torus = new THREE.Mesh(torusGeom, this.greenMat);
+        this.torus.castShadow = true;
+        this.torus.receiveShadow = true;
+        this.core = new THREE.Mesh(coreGeom,this.greyMat);
+        this.core.castShadow = true;
+        this.core.receiveShadow = true;
+        this.cone = new THREE.Mesh(coneGeom, this.yellowMat);
+        this.cone.castShadow = true;
+        this.cone.receiveShadow = true;
+
+        // propellers
+        var prop1 = new THREE.Mesh(propGeom, this.redMat);
+        prop1.castShadow = true;
+        prop1.receiveShadow = true;
+        prop1.position.z = 15;
+        var prop2 = prop1.clone();
+        prop2.rotation.z = Math.PI/2;
+        var prop3 = prop1.clone();
+        prop3.rotation.z = Math.PI;
+        var prop4 = prop1.clone();
+        prop4.rotation.z = -Math.PI/2;
+
+        this.scrip = [];
+
+        this.scrip1 = new THREE.Mesh(scripGeom, this.blueMat);
+        this.scrip1.position.x = -19;
+        this.scrip1.position.y = 50;
+        this.scrip1.position.z = 22;
+        this.scrip1.rotation.z = -Math.PI/2;
+        this.scrip2 = this.scrip1.clone();
+        this.scrip2.position.x = 0;
+        this.scrip2.position.y = 53;
+        this.scrip3 = this.scrip1.clone();
+        this.scrip3.position.x = 19;
+        this.scrip3.position.y = 50;
+
+        this.scrip.push(this.scrip1);
+        this.scrip.push(this.scrip2);
+        this.scrip.push(this.scrip3);
+
+        this.sphere = new THREE.Mesh(sphereGeom, this.yellowMat);
+        this.sphere.castShadow = true;
+        this.sphere.receiveShadow = true;
+        this.sphere.position.z = 15;
+
+        this.torus.position.z = 15;
+        this.torus.scale.x = 5;
+        this.torus.scale.y = 5;
+        this.torus.scale.z = 5;
+        this.core.rotation.x =  Math.PI/2;
+        this.cone.position.y = -50;
+
+        this.propeller = new THREE.Group();
+        this.propeller.add(prop1);
+        this.propeller.add(prop2);
+        this.propeller.add(prop3);
+        this.propeller.add(prop4);
+
+        this.threescrips = new THREE.Group();
+        this.threescrips.add(this.scrip1);
+        this.threescrips.add(this.scrip2);
+        this.threescrips.add(this.scrip3);
+
+        this.threegroup = new THREE.Group();
+        this.threegroup.add(this.torus);
+        this.threegroup.add(this.core);
+        this.threegroup.add(this.cone);
+        this.threegroup.add(this.propeller);
+        this.threegroup.add(this.sphere);
+        this.threegroup.add(this.threescrips);
+
+        this.threegroup.name = "fan";
+    }
+
+    Fan.prototype.update = function(){
+
+
+        this.threegroup.position.z=0;
+
+        if (this.speed<speedControl.speed) {
+            this.acc += 0.0001;
+            this.speed += this.acc;
+        }
+        else if (this.speed>speedControl.speed){
+            this.acc = 0;
+            this.amp = 0;
+            this.speed *= .98;
+        }
+        this.propeller.rotation.z += this.speed;
+
+
+        for (var i = 0; i < this.scrip.length; i++) {
+            this.scrip[i].rotation.x = -Math.PI*this.speed+Math.random()*this.speed;
+        }
+    }
+
+    main();
 
 </script>
 </html>
