@@ -2,8 +2,8 @@
 
 // global
 let scene = new THREE.Scene(),
-    FPCamera = new THREE.PerspectiveCamera(50, 1, 0.01, 1000),    // first-person camera
-    TPCamera = new THREE.PerspectiveCamera(75, 1, 0.01, 1000),   // third-person camera
+    FPCamera = new THREE.PerspectiveCamera(50, 1, 0.01, 10000),    // first-person camera
+    TPCamera = new THREE.PerspectiveCamera(75, 1, 0.01, 10000),   // third-person camera
     renderer = new THREE.WebGLRenderer(),
     TPControl = new THREE.OrbitControls(TPCamera, document.getElementById("canvas-frame")),     // third-person camera is controlled with orbit control
     FPControl = new THREE.PointerLockControls(FPCamera),   // controlled with first-person control
@@ -50,8 +50,8 @@ function init() {
     resize();
     // parameters for third-person camera control
     TPControl.screenSpacePanning = true;
-    TPControl.minDistance = 5;
-    TPControl.maxDistance = 100;
+    TPControl.minDistance = 0.1;
+    TPControl.maxDistance = 10000;
     TPControl.target.set(0, 0, 0);
     TPControl.enableKeys = false;
     TPCamera.position.set(0, 20, 40);
@@ -82,11 +82,11 @@ function buildScene() {
     // cube
     let cube = drawBox(1, 1, 1, 0x00ff00);
     cube.position.set(0, 5, 0);
-    cube.animate = function () {
-        this.rotation.x += 0.01;
-        this.rotation.y += 0.01;
-        this.rotation.z += 0.01;
-    };
+    // cube.animate = function () {
+    //     this.rotation.x += 0.01;
+    //     this.rotation.y += 0.01;
+    //     this.rotation.z += 0.01;
+    // };
     scene.add(cube);
 
     let bed1 = drawBed();
@@ -134,6 +134,8 @@ function buildScene() {
 
     let gui = new dat.GUI();
     gui.add(speedControl, 'speed', 0, 0.5).name("Speed");
+
+    addCard2Sidebar();
 }
 
 function resize() {
@@ -217,11 +219,14 @@ function onKeyDown(event) {
             if (canJump === true) agentVelocity.y += 35;
             canJump = false;
             break;
-        case 81:
+        case 81: // q
             if (!FPControl.isLocked) turnleft = true;
             break;
-        case 69:
+        case 69: // e
             if (!FPControl.isLocked) turnright = true;
+            break;
+        case 13: // enter
+            zoomToFit();
             break;
         default:
             break;
@@ -568,3 +573,48 @@ Fan.prototype.update = function () {
     }
 };
 
+function addCard2Sidebar() {
+    let card = document.createElement("div");
+    card.setAttribute("class", "card col-12 col-md-6");
+    let img = document.createElement("img");
+    img.setAttribute("src", "resources/img/not_found.png");
+    img.setAttribute("class", "img-fluid card-img");
+    img.setAttribute("style", "height: 100%;");
+    card.appendChild(img);
+    document.getElementById("tray").appendChild(card);
+    getMeshImage(drawBed());
+}
+
+function getMeshImage (obj) {
+    let canvas = document.createElement("canvas");
+    let tempRender = new THREE.WebGLRenderer(canvas);
+    let tempScene = new THREE.Scene();
+    let tempCamera = new THREE.PerspectiveCamera(75, 400/620.0, 0.1, 100);
+    tempScene.add(obj);
+    let boundBox = new THREE.Box3();
+    boundBox.applyMatrix4(tempCamera.projectionMatrix);
+    boundBox.setFromObject(obj);
+    return boundBox;
+}
+
+function zoomToFit() {
+    let boundBox = new THREE.Box3();
+    for(let object of scene.children) {
+        if(object.name==="box") {
+            boundBox.expandByObject(object);
+        }
+    }
+    boundBox.applyMatrix4(TPCamera.matrixWorldInverse);
+    let center = boundBox.getCenter();
+    let size = boundBox.getSize();
+    let cameraP = center.clone();
+    cameraP.z = 1/2.0/Math.tan(TPCamera.fov*Math.PI/360.0);
+    cameraP.z = Math.max(size.y*cameraP.z, size.x*cameraP.z/TPCamera.aspect);
+    cameraP.z = center.z + 1.5*cameraP.z;
+    center.applyMatrix4(TPCamera.matrixWorld);
+    cameraP.applyMatrix4(TPCamera.matrixWorld);
+    TPControl.target.set(center.x, center.y, center.z);
+    TPCamera.lookAt(center.x, center.y, center.z);
+    TPCamera.position.set(cameraP.x, cameraP.y, cameraP.z);
+    TPControl.update();
+}
