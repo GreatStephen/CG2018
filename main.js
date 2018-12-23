@@ -26,12 +26,16 @@ let speedControl = new function () {
     this.speed = 0;
 };
 
+// collision detection
 let man;
-let raycaster = new THREE.Raycaster();
+let raycaster1 = new THREE.Raycaster(),
+    raycaster2 = new THREE.Raycaster(),
+    raycaster3 = new THREE.Raycaster();
 let isCollision = false;
 let target = new THREE.Vector3();
 let quaternion_target = new THREE.Quaternion();
 const COLLOSION_DIST = 5;
+const RAYCASTER_DIST = 3;
 let collision_items = new Array();
 
 main();
@@ -193,11 +197,28 @@ function moveCamera() {
     FPCamera.getWorldQuaternion(quaternion_target);
 
     movedirection.applyQuaternion(quaternion_target);
-    raycaster.set(man.getWorldPosition(target), movedirection.normalize());
-    let intersects = raycaster.intersectObjects(collision_items, true);
+    man.getWorldPosition(target);
+    raycaster1.set(target, movedirection.normalize());
+    raycaster2.set(new THREE.Vector3(target.x, target.y - RAYCASTER_DIST, target.z), movedirection.normalize());
+    raycaster3.set(new THREE.Vector3(target.x, target.y + RAYCASTER_DIST, target.z), movedirection.normalize());
+    let intersects1 = raycaster1.intersectObjects(collision_items, true),
+        intersects2 = raycaster2.intersectObjects(collision_items, true),
+        intersects3 = raycaster3.intersectObjects(collision_items, true);
 
-    if(intersects.length!=0 && intersects[0].distance < COLLOSION_DIST){
+    if(intersects1.length!=0 && intersects1[0].distance < COLLOSION_DIST){
         isCollision=true;
+        agentVelocity.x = 0;
+        agentVelocity.z = 0;
+        agentVelocity.y = 0;
+    }
+    if (intersects2.length != 0 && intersects2[0].distance < COLLOSION_DIST) {
+        isCollision = true;
+        agentVelocity.x = 0;
+        agentVelocity.z = 0;
+        agentVelocity.y = 0;
+    }
+    if (intersects3.length != 0 && intersects3[0].distance < COLLOSION_DIST) {
+        isCollision = true;
         agentVelocity.x = 0;
         agentVelocity.z = 0;
         agentVelocity.y = 0;
