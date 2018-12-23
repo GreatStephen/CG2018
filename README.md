@@ -54,6 +54,12 @@ Controls in fullscreen mode are listed below.
 
 * realize the function of importing mesh locally
 
+### 2018/12/23 by Jiangeng Dong
+
+* add buttons to sidebar
+
+    click on the button, and the value of 'objectToPlace' will change. Maybe we can attach an 'onchange' event to this variable.
+
 ## TODO
 
 * shadows

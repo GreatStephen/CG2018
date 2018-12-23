@@ -21,6 +21,7 @@ let moveForward = false,
 let prevTime = performance.now();
 
 let stats;
+let objectToPlace = null; // the object selected on the sidebar
 
 let speedControl = new function () {
     this.speed = 0;
@@ -36,7 +37,7 @@ let target = new THREE.Vector3();
 let quaternion_target = new THREE.Quaternion();
 const COLLOSION_DIST = 5;
 const RAYCASTER_DIST = 3;
-let collision_items = new Array();
+let collision_items = [];
 
 main();
 
@@ -44,7 +45,7 @@ function main() {
     init();
     buildScene();
 
-    console.log("items="+collision_items.length);
+    console.log("items=" + collision_items.length);
     // keyboard and mouse events
     renderer.domElement.addEventListener('dblclick', onDoubleClick, false);
     document.addEventListener("webkitfullscreenchange", onFullscreenChange, false);
@@ -112,7 +113,8 @@ function buildScene() {
     collision_items.push(bed1);
 
     // the man to be controlled
-    man = loadMesh("resources/model/male02.obj", null, "man");
+    man = loadMesh("resources/model/Male02/male02.obj",
+        "resources/model/Male02/male02.mtl", "man");
     [man.scale.x, man.scale.y, man.scale.z] = [0.06, 0.06, 0.06];
     man.rotateY(Math.PI);
     man.translateY(-10);
@@ -153,7 +155,8 @@ function buildScene() {
     let gui = new dat.GUI();
     gui.add(speedControl, 'speed', 0, 0.5).name("Speed");
 
-    addCard2Sidebar();
+    addCard2Sidebar(drawBed());
+    addCard2Sidebar(drawBox(1, 1, 1));
 }
 
 function resize() {
@@ -192,9 +195,9 @@ function moveCamera() {
 
 
     // collision detection
-    movedirection.x = Number(moveRight)-Number(moveLeft);
+    movedirection.x = Number(moveRight) - Number(moveLeft);
     movedirection.y = 0;
-    movedirection.z = Number(moveBackward)-Number(moveForward);
+    movedirection.z = Number(moveBackward) - Number(moveForward);
     isCollision = false;
     FPCamera.getWorldQuaternion(quaternion_target);
 
@@ -207,26 +210,26 @@ function moveCamera() {
         intersects2 = raycaster2.intersectObjects(collision_items, true),
         intersects3 = raycaster3.intersectObjects(collision_items, true);
 
-    if(intersects1.length!=0 && intersects1[0].distance < COLLOSION_DIST){
-        isCollision=true;
-        agentVelocity.x = 0;
-        agentVelocity.z = 0;
-        agentVelocity.y = 0;
-    }
-    if (intersects2.length != 0 && intersects2[0].distance < COLLOSION_DIST) {
+    if (intersects1.length !== 0 && intersects1[0].distance < COLLOSION_DIST) {
         isCollision = true;
         agentVelocity.x = 0;
         agentVelocity.z = 0;
         agentVelocity.y = 0;
     }
-    if (intersects3.length != 0 && intersects3[0].distance < COLLOSION_DIST) {
+    if (intersects2.length !== 0 && intersects2[0].distance < COLLOSION_DIST) {
+        isCollision = true;
+        agentVelocity.x = 0;
+        agentVelocity.z = 0;
+        agentVelocity.y = 0;
+    }
+    if (intersects3.length !== 0 && intersects3[0].distance < COLLOSION_DIST) {
         isCollision = true;
         agentVelocity.x = 0;
         agentVelocity.z = 0;
         agentVelocity.y = 0;
     }
 
-    if(isCollision == false){
+    if (isCollision === false) {
         // damping
         agentVelocity.x *= 1 - deltaT * 10.0;
         agentVelocity.z *= 1 - deltaT * 10.0;
@@ -286,7 +289,7 @@ function onKeyDown(event) {
             if (!FPControl.isLocked) turnright = true;
             break;
         case 13: // enter
-            zoomToFit();
+            zoomToFit(collision_items);
             break;
         default:
             break;
@@ -414,7 +417,7 @@ function drawPillar(ball_size, cylinder_height) {
         new THREE.OctahedronGeometry(ball_size, 2),
         new THREE.MeshStandardMaterial({
             color: 0x72bdbf,
-            shading: THREE.FlatShading,
+            flatShading: true,
             metalness: 0,
             roughness: 0.8,
             refractionRatio: 0.25
@@ -430,7 +433,7 @@ function drawPillar(ball_size, cylinder_height) {
         new THREE.CylinderGeometry(5, 5, cylinder_height, 32),
         new THREE.MeshStandardMaterial({
             color: 0xf8db08,
-            shading: THREE.FlatShading,
+            flatShading: true,
             metalness: 0,
             roughness: 0.8,
             refractionRatio: 0.25
@@ -452,7 +455,7 @@ function drawBox(x, y, z, color = 0x3CB371) {
         new THREE.BoxGeometry(x, y, z),
         new THREE.MeshStandardMaterial({
             color: color,
-            shading: THREE.FlatShading,
+            flatShading: true,
             metalness: 0,
             roughness: 0.8,
             refractionRatio: 0.25
@@ -493,7 +496,7 @@ function drawBed() {
     bed.add(pillar4);
     bed.add(board1);
     bed.add(box1);
-
+    bed.name = "bed";
     return bed;
 }
 
@@ -633,48 +636,71 @@ Fan.prototype.update = function () {
     }
 };
 
-function addCard2Sidebar() {
-    let card = document.createElement("div");
-    card.setAttribute("class", "card col-12 col-md-6");
+function addCard2Sidebar(obj) {
+    let card = document.createElement("button");
+    card.setAttribute("class", "card col-12 col-md-6 btn");
     let img = document.createElement("img");
-    img.setAttribute("src", "resources/img/not_found.png");
+    img.setAttribute("src", getImage(obj));
     img.setAttribute("class", "img-fluid card-img");
     img.setAttribute("style", "height: 100%;");
     card.appendChild(img);
+    card.setAttribute("onclick", "objectToPlace='"+obj.name+"'");
     document.getElementById("tray").appendChild(card);
-    getMeshImage(drawBed());
+
 }
 
-function getMeshImage (obj) {
-    let canvas = document.createElement("canvas");
-    let tempRender = new THREE.WebGLRenderer(canvas);
-    let tempScene = new THREE.Scene();
-    let tempCamera = new THREE.PerspectiveCamera(75, 400/620.0, 0.1, 100);
-    tempScene.add(obj);
+function zoomToFit(objList, cam = TPCamera, con = TPControl) {
     let boundBox = new THREE.Box3();
-    boundBox.applyMatrix4(tempCamera.projectionMatrix);
-    boundBox.setFromObject(obj);
-    return boundBox;
-}
-
-function zoomToFit() {
-    let boundBox = new THREE.Box3();
-    for(let object of scene.children) {
-        if(object.name==="box") {
+    for (let object of objList) {
+        if (object.visible) {
             boundBox.expandByObject(object);
         }
     }
-    boundBox.applyMatrix4(TPCamera.matrixWorldInverse);
-    let center = boundBox.getCenter();
-    let size = boundBox.getSize();
+    boundBox.applyMatrix4(cam.matrixWorldInverse);
+    let center = boundBox.getCenter(new THREE.Vector3());
+    let size = boundBox.getSize(new THREE.Vector3());
     let cameraP = center.clone();
-    cameraP.z = 1/2.0/Math.tan(TPCamera.fov*Math.PI/360.0);
-    cameraP.z = Math.max(size.y*cameraP.z, size.x*cameraP.z/TPCamera.aspect);
-    cameraP.z = center.z + 1.5*cameraP.z;
-    center.applyMatrix4(TPCamera.matrixWorld);
-    cameraP.applyMatrix4(TPCamera.matrixWorld);
-    TPControl.target.set(center.x, center.y, center.z);
-    TPCamera.lookAt(center.x, center.y, center.z);
-    TPCamera.position.set(cameraP.x, cameraP.y, cameraP.z);
-    TPControl.update();
+    cameraP.z = 1 / 2.0 / Math.tan(cam.fov * Math.PI / 360.0);
+    cameraP.z = Math.max(size.y * cameraP.z, size.x * cameraP.z / cam.aspect);
+    cameraP.z = boundBox.max.z + cameraP.z;
+    center.applyMatrix4(cam.matrixWorld);
+    cameraP.applyMatrix4(cam.matrixWorld);
+    cam.lookAt(center.x, center.y, center.z);
+    cam.position.set(cameraP.x, cameraP.y, cameraP.z);
+    if (con) {
+        con.target.set(center.x, center.y, center.z);
+        con.update();
+    }
+}
+
+function getImage(obj) {
+    let rendererTemp = new THREE.WebGLRenderer();
+    rendererTemp.setSize("620", "400");
+
+    let sceneTemp = new THREE.Scene();
+    let light = newPointLight(1, 0xffffff);
+    light.position.set(70, 100, 30);
+    sceneTemp.add(light);
+    light = newAmbientLight(0.2, 0xffffff);
+    sceneTemp.add(light);
+    sceneTemp.add(obj);
+    sceneTemp.background = new THREE.Color(0xffffff);
+
+    let cameraTemp = new THREE.PerspectiveCamera(75, 620.0 / 400.0, 0.1, 1000);
+    cameraTemp.position.set(80, 80, 80);
+    cameraTemp.lookAt(new THREE.Vector3(0, 0, 0));
+    cameraTemp.updateMatrixWorld();
+
+    let con = new THREE.OrbitControls(cameraTemp);
+    con.screenSpacePanning = true;
+    con.minDistance = 0.1;
+    con.maxDistance = 10000;
+    con.target.set(0, 0, 0);
+    con.enableKeys = false;
+    con.dispose();
+    con.update();
+
+    zoomToFit([obj], cameraTemp, con);
+    rendererTemp.render(sceneTemp, cameraTemp);
+    return rendererTemp.domElement.toDataURL();
 }
