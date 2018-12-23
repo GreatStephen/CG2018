@@ -16,7 +16,8 @@ let moveForward = false,
     moveRight = false,
     turnleft = false,
     turnright = false,
-    canJump = false;    // variables for movement control
+    canJump = false,
+    movedirection = new THREE.Vector3();// variables for movement control
 let prevTime = performance.now();
 
 let stats;
@@ -25,12 +26,21 @@ let speedControl = new function () {
     this.speed = 0;
 };
 
+let man;
+let raycaster = new THREE.Raycaster();
+let isCollision = false;
+let target = new THREE.Vector3();
+let quaternion_target = new THREE.Quaternion();
+const COLLOSION_DIST = 5;
+let collision_items = new Array();
+
 main();
 
 function main() {
     init();
     buildScene();
 
+    console.log("items="+collision_items.length);
     // keyboard and mouse events
     renderer.domElement.addEventListener('dblclick', onDoubleClick, false);
     document.addEventListener("webkitfullscreenchange", onFullscreenChange, false);
@@ -88,14 +98,17 @@ function buildScene() {
         this.rotation.z += 0.01;
     };
     scene.add(cube);
+    collision_items.push(cube);
 
+    // bed
     let bed1 = drawBed();
     bed1.position.set(20, 0, 0);
     [bed1.scale.x, bed1.scale.y, bed1.scale.z] = [0.2, 0.2, 0.2];
     scene.add(bed1);
+    collision_items.push(bed1);
 
     // the man to be controlled
-    let man = loadMesh("resources/model/male02.obj", null, "man");
+    man = loadMesh("resources/model/male02.obj", null, "man");
     [man.scale.x, man.scale.y, man.scale.z] = [0.06, 0.06, 0.06];
     man.rotateY(Math.PI);
     man.translateY(-10);
@@ -109,6 +122,7 @@ function buildScene() {
     door.translateZ(-10);
     [door.scale.x, door.scale.y, door.scale.z] = [8, 8, 8];
     scene.add(door);
+    collision_items.push(door);
 
     // TODO: there is some problem with Fan, please fix it
     // let fan = new Fan();
@@ -169,28 +183,53 @@ function moveCamera() {
     let time = performance.now();
     let deltaT = (time - prevTime) / 1000.0;
     prevTime = time;
-    // damping
-    agentVelocity.x *= 1 - deltaT * 10.0;
-    agentVelocity.z *= 1 - deltaT * 10.0;
-    agentVelocity.y -= 9.8 * deltaT * 10.0;
-    // accelerate
-    agentDirection.z = Number(moveForward) - Number(moveBackward);
-    agentDirection.x = Number(moveLeft) - Number(moveRight);
-    agentDirection.normalize();
-    if (moveForward || moveBackward) agentVelocity.z -= agentDirection.z * 400.0 * deltaT;
-    if (moveLeft || moveRight) agentVelocity.x -= agentDirection.x * 400.0 * deltaT;
-    // apply movement
-    FPControl.getObject().translateX(agentVelocity.x * deltaT);
-    FPControl.getObject().translateY(agentVelocity.y * deltaT);
-    FPControl.getObject().translateZ(agentVelocity.z * deltaT);
-    // above ground
-    if (FPControl.getObject().position.y < 10) {
+
+
+    // collision detection
+    movedirection.x = Number(moveRight)-Number(moveLeft);
+    movedirection.y = 0;
+    movedirection.z = Number(moveBackward)-Number(moveForward);
+    isCollision = false;
+    FPCamera.getWorldQuaternion(quaternion_target);
+
+    movedirection.applyQuaternion(quaternion_target);
+    raycaster.set(man.getWorldPosition(target), movedirection.normalize());
+    let intersects = raycaster.intersectObjects(collision_items, true);
+
+    if(intersects.length!=0 && intersects[0].distance < COLLOSION_DIST){
+        isCollision=true;
+        agentVelocity.x = 0;
+        agentVelocity.z = 0;
         agentVelocity.y = 0;
-        FPControl.getObject().position.y = 10;
-        canJump = true;
     }
-    if (!FPControl.isLocked) {
-        FPControl.getObject().rotateY((Number(turnleft) - Number(turnright)) * deltaT * 5);
+
+    if(isCollision == false){
+        // damping
+        agentVelocity.x *= 1 - deltaT * 10.0;
+        agentVelocity.z *= 1 - deltaT * 10.0;
+        agentVelocity.y -= 9.8 * deltaT * 10.0;
+        // accelerate
+        agentDirection.z = Number(moveForward) - Number(moveBackward);
+        agentDirection.x = Number(moveLeft) - Number(moveRight);
+        agentDirection.normalize();
+        if (moveForward || moveBackward) agentVelocity.z -= agentDirection.z * 400.0 * deltaT;
+        if (moveLeft || moveRight) agentVelocity.x -= agentDirection.x * 400.0 * deltaT;
+
+        // apply movement
+        FPControl.getObject().translateX(agentVelocity.x * deltaT);
+        FPControl.getObject().translateY(agentVelocity.y * deltaT);
+        FPControl.getObject().translateZ(agentVelocity.z * deltaT);
+
+
+        // above ground
+        if (FPControl.getObject().position.y < 10) {
+            agentVelocity.y = 0;
+            FPControl.getObject().position.y = 10;
+            canJump = true;
+        }
+        if (!FPControl.isLocked) {
+            FPControl.getObject().rotateY((Number(turnleft) - Number(turnright)) * deltaT * 5);
+        }
     }
 }
 
