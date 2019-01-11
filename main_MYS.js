@@ -1,95 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Our Computer Graphic final project</title>
-    <link rel="stylesheet" href="css/bootstrap.min.css">
-    <style>
-        body {
-            margin: 0;
-            height: 100%;
-            width: 100%;
-        }
+"use strict";
 
-        canvas {
-            width: 100%;
-            height: 100%
-        }
-    </style>
-</head>
-
-<body>
-<div class="row no-gutters">
-    <div class="col-3">
-        <div class="row no-gutters container" id="tray" style="margin-top: 2.5%">
-            <button class="card col-12 col-md-6 btn" data-toggle="modal" data-target="#importMesh">
-                <img class="img-fluid" src="resources/img/plus_sign.jpg" alt="add new model">
-            </button>
-        </div>
-        <hr>
-        <div class="row no-gutters collapse">
-            <form id="property">
-                <label for="test" class="col-form-label">test</label>
-                <input type="range" class="custom-range" id="test">
-            </form>
-        </div>
-    </div>
-    <div class="col-9">
-        <div id="canvas-frame" style="position: fixed">
-
-        </div>
-    </div>
-</div>
-
-<!--a popout window for importing .obj files-->
-<div class="modal fade" id="importMesh" tabindex="-1" role="dialog" aria-labelledby="importMeshLabel"
-     aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="importMeshLabel">Import Mesh</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="input-group mb-3">
-                    <div class="custom-file">
-                        <label class="custom-file-label" for="file_path" id="file_path_label">Choose file</label>
-                        <input type="file" class="custom-file-input" id="file_path"
-                               onchange="document.getElementById('file_path_label').innerText=this.value.split('\\').pop()">
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" onclick="importMesh()" data-dismiss="modal">Import
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-</body>
-
-<!--scripts-->
-<script src="js/three.js"></script>
-<script src="js/controls/OrbitControls.js"></script>
-<script src="js/controls/PointerLockControls.js"></script>
-<script src="js/loaders/LoaderSupport.js"></script>
-<script src="js/loaders/OBJLoader2.js"></script>
-<script src="js/loaders/MTLLoader.js"></script>
-<script src="js/libs/inflate.min.js"></script>
-<script src="js/loaders/FBXLoader.js"></script>
-<script src="js/libs/stats.min.js"></script>
-<script src="js/libs/dat.gui.min.js"></script>
-<script src="js/WebGL.js"></script>
-<script src="js/bootstrap/jquery-3.3.1.min.js"></script>
-<script src="js/bootstrap/popper.js"></script>
-<script src="js/bootstrap/bootstrap.min.js"></script>
-<script>
-
-    // global
+// global
     let scene = new THREE.Scene(),
         FPCamera = new THREE.PerspectiveCamera(50, 1, 0.01, 10000),    // first-person camera
         TPCamera = new THREE.PerspectiveCamera(75, 1, 0.01, 10000),   // third-person camera
@@ -135,8 +46,10 @@
     let Fan;
     let clock = new THREE.Clock();
     let meshHelper, mixer;
+    let reflectionCube, refractionCube;
 
     function main() {
+
         init();
         buildScene();
 
@@ -158,6 +71,7 @@
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         // adjust canvas
         resize();
+
         // parameters for third-person camera control
         TPControl.screenSpacePanning = true;
         TPControl.minDistance = 0.1;
@@ -172,7 +86,22 @@
         FPCamera.name = "First-Person Camera";
         scene.add(FPControl.getObject());
         // background color
-        scene.background = new THREE.Color(0xffffff);
+        //scene.background = new THREE.Color(0xffffff);
+        var path = "resources/img/skybox/";
+        var format = '.jpg';
+        var urls = [
+            path + 'left' + format, path + 'right' + format,
+            path + 'top' + format, path + 'down' + format,
+            path + 'front' + format, path + 'back' + format
+        ];
+
+        reflectionCube = new THREE.CubeTextureLoader().load( urls );
+        reflectionCube.format = THREE.RGBFormat;
+        refractionCube = new THREE.CubeTextureLoader().load( urls );
+        refractionCube.mapping = THREE.CubeRefractionMapping;
+        refractionCube.format = THREE.RGBFormat;
+        scene.background = reflectionCube;
+
         // FPS counter
         stats = new Stats();
         stats.domElement.style.position = 'absolute';
@@ -246,6 +175,35 @@
         // model
         var dance = new THREE.FBXLoader();
         danceAnimate(dance, "resources/model/Dancing/Dancing.fbx", gui);
+
+        // reflection boxes
+        var cubeMaterial3 = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube, combine: THREE.MixOperation, reflectivity: 0.3 } );
+        var cubeMaterial2 = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: refractionCube, refractionRatio: 0.95 } );
+        var cubeMaterial1 = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: reflectionCube } );
+
+        let box1 = new THREE.Mesh(
+            new THREE.BoxGeometry(6, 6, 6),
+           cubeMaterial1
+        );
+        box1.position.set(-20,3,10);
+        scene.add(box1);
+        collision_items.push(box1);
+
+        let box2 = new THREE.Mesh(
+            new THREE.BoxGeometry(6, 6, 6),
+            cubeMaterial2
+        );
+        box2.position.set(-20,3,-10);
+        scene.add(box2);
+        collision_items.push(box2);
+
+        let box3 = new THREE.Mesh(
+            new THREE.BoxGeometry(6, 6, 6),
+            cubeMaterial3
+        );
+        box3.position.set(-20,3,0);
+        scene.add(box3);
+        collision_items.push(box3);
 
 
         // point light
@@ -865,6 +823,3 @@
     }
 
     main();
-
-</script>
-</html>
