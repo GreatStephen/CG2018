@@ -157,6 +157,9 @@ function buildScene() {
 
     addCard2Sidebar(drawBed());
     addCard2Sidebar(drawBox(1, 1, 1));
+    addProperty2SideBar('email', 'hhhh');
+    clearPropertyInSideBar();
+    addProperty2SideBar('email', 'hhhh');
 }
 
 function resize() {
@@ -703,4 +706,37 @@ function getImage(obj) {
     zoomToFit([obj], cameraTemp, con);
     rendererTemp.render(sceneTemp, cameraTemp);
     return rendererTemp.domElement.toDataURL();
+}
+
+function changeSidebar(isTray) {
+    if (isTray) {
+        $("#tray").collapse('show');
+        $('#property-panel').collapse('hide');
+        $('#switch-sidebar').attr('onclick', "changeSidebar(false);")
+    }
+    else {
+        $("#tray").collapse('hide');
+        $('#property-panel').collapse('show');
+        $('#switch-sidebar').attr('onclick', "changeSidebar(true);")
+    }
+}
+
+function addProperty2SideBar(type, name) {
+    let input = document.createElement('input');
+    let label = document.createElement('label');
+    label.setAttribute('for', name);
+    label.setAttribute('class', 'col-form-label col-3');
+    label.innerText = name;
+    input.setAttribute('id', name);
+    input.setAttribute('class', 'form-control col-9');
+    input.setAttribute('type', type);
+    let form_row = document.createElement('div');
+    form_row.setAttribute('class', 'form-row');
+    form_row.appendChild(label);
+    form_row.appendChild(input);
+    document.getElementById('property').appendChild(form_row);
+}
+
+function clearPropertyInSideBar() {
+    $('#property').empty();
 }
