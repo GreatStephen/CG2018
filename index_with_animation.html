@@ -225,14 +225,6 @@
         scene.add(door);
         collision_items.push(door);
 
-        let tree = loadMesh("resources/model/Furniture/Chair.obj","resources/model/Furniture/Chair.mtl","chair");
-        tree.translateX(-10);
-        tree.translateZ(30);
-        [tree.scale.x, tree.scale.y, tree.scale.z] = [2, 2, 2];
-        scene.add(tree);
-        collision_items.push(tree);
-
-
         let fan = new Fan();
         fan.threegroup.position.y = 5;
         fan.threegroup.position.x = -10;
