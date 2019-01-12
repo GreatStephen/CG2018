@@ -28,6 +28,10 @@ let speedControl = new function () {
     this.speed = 0;
 };
 
+let animationControl = {
+    skeleton: true
+};
+
 // collision detection
 let man;
 let raycaster1 = new THREE.Raycaster(),
@@ -40,7 +44,10 @@ const COLLOSION_DIST = 5;
 const RAYCASTER_DIST = 3;
 let collision_items = [];
 
-main();
+let Fan;
+let clock = new THREE.Clock();
+let meshHelper, mixer;
+let reflectionCube, refractionCube;
 
 function main() {
     init();
@@ -66,6 +73,7 @@ function init() {
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     // adjust canvas
     resize();
+
     // parameters for third-person camera control
     TPControl.screenSpacePanning = true;
     TPControl.minDistance = 0.1;
@@ -80,7 +88,9 @@ function init() {
     FPCamera.name = "First-Person Camera";
     scene.add(FPControl.getObject());
     // background color
-    scene.background = new THREE.Color(0xffffff);
+    drawSky();
+    scene.background = reflectionCube;
+
     // FPS counter
     stats = new Stats();
     stats.domElement.style.position = 'absolute';
@@ -100,11 +110,11 @@ function buildScene() {
     // cube
     let cube = drawBox(1, 1, 1, 0x00ff00);
     cube.position.set(0, 5, 0);
-    // cube.animate = function () {
-    //     this.rotation.x += 0.01;
-    //     this.rotation.y += 0.01;
-    //     this.rotation.z += 0.01;
-    // };
+    cube.animate = function () {
+        this.rotation.x += 0.01;
+        this.rotation.y += 0.01;
+        this.rotation.z += 0.01;
+    };
     scene.add(cube);
     collision_items.push(cube);
 
@@ -133,18 +143,62 @@ function buildScene() {
     scene.add(door);
     collision_items.push(door);
 
-    // TODO: there is some problem with Fan, please fix it
-    // let fan = new Fan();
-    //     // fan.threegroup.layers.mask = 0xffffffff;
-    //     // fan.threegroup.scale.x = 0.1;
-    //     // fan.threegroup.scale.y = 0.1;
-    //     // fan.threegroup.scale.z = 0.1;
-    //     // fan.threegroup.position.y = 10;
-    //     // fan.threegroup.position.x = -20;
-    //     // fan.threegroup.animate = function(){
-    //     //     fan.update();
-    //     // };
-    //     // scene.add(fan.threegroup);
+    let fan = new Fan();
+    fan.threegroup.position.y = 5;
+    fan.threegroup.position.x = -10;
+    [fan.threegroup.scale.x, fan.threegroup.scale.y, fan.threegroup.scale.z] = [0.05, 0.05, 0.05];
+    fan.threegroup.animate = function () {
+        fan.update();
+    };
+    scene.add(fan.threegroup);
+    collision_items.push(fan.threegroup);
+
+    let gui = new dat.GUI();
+    gui.add(speedControl, 'speed', 0, 0.5).name("Speed");
+    gui.add(animationControl, "skeleton").onChange(
+        function (e) {
+            meshHelper.visible = e;
+        }
+    );
+
+    // model
+    var dance = new THREE.FBXLoader();
+    danceAnimate(dance, "resources/model/Dancing/Dancing.fbx", gui);
+
+    // reflection boxes
+    var cubeMaterial3 = new THREE.MeshLambertMaterial({
+        color: 0xffffff,
+        envMap: reflectionCube,
+        combine: THREE.MixOperation,
+        reflectivity: 0.3
+    });
+    var cubeMaterial2 = new THREE.MeshLambertMaterial({color: 0xffffff, envMap: refractionCube, refractionRatio: 0.95});
+    var cubeMaterial1 = new THREE.MeshLambertMaterial({color: 0xffffff, envMap: reflectionCube});
+
+    let box1 = new THREE.Mesh(
+        new THREE.BoxGeometry(6, 6, 6),
+        cubeMaterial1
+    );
+    box1.position.set(-20, 3, 10);
+    scene.add(box1);
+    collision_items.push(box1);
+
+    let box2 = new THREE.Mesh(
+        new THREE.BoxGeometry(6, 6, 6),
+        cubeMaterial2
+    );
+    box2.position.set(-20, 3, -10);
+    scene.add(box2);
+    collision_items.push(box2);
+
+    let box3 = new THREE.Mesh(
+        new THREE.BoxGeometry(6, 6, 6),
+        cubeMaterial3
+    );
+    box3.position.set(-20, 3, 0);
+    scene.add(box3);
+    collision_items.push(box3);
+
 
     // point light
     let light = newPointLight(1, 0xffffff);
@@ -154,9 +208,6 @@ function buildScene() {
     // ambient light
     light = newAmbientLight(0.2, 0xffffff);
     scene.add(light);
-
-    let gui = new dat.GUI();
-    gui.add(speedControl, 'speed', 0, 0.5).name("Speed");
 }
 
 function addSidebar() {
@@ -164,64 +215,57 @@ function addSidebar() {
     addCard2Sidebar(drawBox(1, 1, 1));
 
     addProperty2SideBar('number', 'X', {'step': 0.01, 'placeholder': 'NaN'}, (event) => {
-        if(objectSelected) {
+        if (objectSelected) {
             objectSelected.position.x = event.target.value;
-        }
-        else {
+        } else {
             alert('No object is selected now!');
             event.target.value = null;
         }
     });
     addProperty2SideBar('number', 'Y', {'step': 0.01, 'placeholder': 'NaN'}, (event) => {
-        if(objectSelected) {
+        if (objectSelected) {
             objectSelected.position.y = event.target.value;
-        }
-        else {
+        } else {
             alert('No object is selected now!');
             event.target.value = null;
         }
     });
     addProperty2SideBar('number', 'Z', {'step': 0.01, 'placeholder': 'NaN'}, (event) => {
-        if(objectSelected) {
+        if (objectSelected) {
             objectSelected.position.z = event.target.value;
-        }
-        else {
+        } else {
             alert('No object is selected now!');
             event.target.value = null;
         }
     });
     addProperty2SideBar('number', 'Roll', {'step': 0.01, 'placeholder': 'NaN'}, (event) => {
-        if(objectSelected) {
+        if (objectSelected) {
             objectSelected.rotation.x = event.target.value;
-        }
-        else {
+        } else {
             alert('No object is selected now!');
             event.target.value = null;
         }
     });
     addProperty2SideBar('number', 'Pitch', {'step': 0.01, 'placeholder': 'NaN'}, (event) => {
-        if(objectSelected) {
+        if (objectSelected) {
             objectSelected.rotation.y = event.target.value;
-        }
-        else {
+        } else {
             alert('No object is selected now!');
             event.target.value = null;
         }
     });
     addProperty2SideBar('number', 'Yaw', {'step': 0.01, 'placeholder': 'NaN'}, (event) => {
-        if(objectSelected) {
+        if (objectSelected) {
             objectSelected.rotation.z = event.target.value;
-        }
-        else {
+        } else {
             alert('No object is selected now!');
             event.target.value = null;
         }
     });
-    addProperty2SideBar('color', 'Color', null, (event)=> {
-        if(objectSelected) {
+    addProperty2SideBar('color', 'Color', null, (event) => {
+        if (objectSelected) {
             objectSelected.material.color.setStyle(event.target.value);
-        }
-        else {
+        } else {
             alert('No object is selected now!');
             event.target.value = '#000000';
         }
@@ -253,7 +297,12 @@ function animate() {
     moveCamera();
     renderer.render(scene, camera);
     requestAnimationFrame(animate);
+    let time = clock.getDelta();
 
+    if (mixer) {
+        mixer.update(time);
+    }
+    renderer.render(scene, camera);
     stats.update();
 }
 
@@ -569,7 +618,22 @@ function drawBed() {
     return bed;
 }
 
-let Fan;
+function drawSky() {
+    let path = "resources/img/skybox/";
+    let format = '.jpg';
+    let urls = [
+        path + 'left' + format, path + 'right' + format,
+        path + 'top' + format, path + 'down' + format,
+        path + 'front' + format, path + 'back' + format
+    ];
+
+    reflectionCube = new THREE.CubeTextureLoader().load(urls);
+    reflectionCube.format = THREE.RGBFormat;
+    refractionCube = new THREE.CubeTextureLoader().load(urls);
+    refractionCube.mapping = THREE.CubeRefractionMapping;
+    refractionCube.format = THREE.RGBFormat;
+}
+
 Fan = function () {
     this.speed = 0;
     this.acc = 0;
@@ -682,11 +746,9 @@ Fan = function () {
     this.threegroup.add(this.threescrips);
 
     this.threegroup.name = "fan";
-}
+};
 
 Fan.prototype.update = function () {
-
-
     this.threegroup.position.z = 0;
 
     if (this.speed < speedControl.speed) {
@@ -704,6 +766,58 @@ Fan.prototype.update = function () {
         this.scrip[i].rotation.x = -Math.PI * this.speed + Math.random() * this.speed;
     }
 };
+
+function danceAnimate(dance, modelUrl, gui) {
+    dance.load(modelUrl, function (object) {
+
+        meshHelper = new THREE.SkeletonHelper(object);
+        scene.add(meshHelper);
+
+        mixer = object.mixer = new THREE.AnimationMixer(object);
+
+        object.traverse(function (child) {
+
+            if (child.isMesh) {
+
+                child.castShadow = true;
+                child.receiveShadow = true;
+
+            }
+
+        });
+        let actions = [];
+        let animations = gui.addFolder("animations");
+
+        for (let i = 0; i < object.animations.length; i++) {
+            createAction(i);
+        }
+
+        function createAction(i) {
+            actions[i] = mixer.clipAction(object.animations[i]);
+            let name = "dance";
+            if (i === 1) {
+                name = "stop";
+            }
+            animationControl[name] = function () {
+                for (let j = 0; j < actions.length; j++) {
+                    if (j === i) {
+                        actions[j].play();
+                    } else {
+                        actions[j].stop();
+                    }
+                }
+            };
+
+            animations.add(animationControl, name);
+        }
+
+        object.scale.set(0.05, 0.05, 0.05);
+        object.position.set(-10, 0, -10);
+        scene.add(object);
+        collision_items.push(object);
+
+    });
+}
 
 function addCard2Sidebar(obj) {
     let card = document.createElement("button");
@@ -794,11 +908,11 @@ function selectObject(obj) {
     $('#Roll').attr('value', obj.rotation.x);
     $('#Pitch').attr('value', obj.rotation.y);
     $('#Yaw').attr('value', obj.rotation.z);
-    $('#Color').attr('value', '#'+obj.material.color.getHexString());
+    $('#Color').attr('value', '#' + obj.material.color.getHexString());
     changeSidebar(false);
 }
 
-function addProperty2SideBar(type, name, setting = null, onChange=null) {
+function addProperty2SideBar(type, name, setting = null, onChange = null) {
     let input = document.createElement('input');
     let label = document.createElement('label');
     label.setAttribute('for', name);
