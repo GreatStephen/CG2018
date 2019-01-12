@@ -22,6 +22,7 @@ let prevTime = performance.now();
 
 let stats;
 let objectToPlace = null; // the object selected on the sidebar
+let objectSelected = null;
 
 let speedControl = new function () {
     this.speed = 0;
@@ -44,6 +45,8 @@ main();
 function main() {
     init();
     buildScene();
+    addSidebar();
+    selectObject(collision_items[0]);
 
     console.log("items=" + collision_items.length);
     // keyboard and mouse events
@@ -154,12 +157,75 @@ function buildScene() {
 
     let gui = new dat.GUI();
     gui.add(speedControl, 'speed', 0, 0.5).name("Speed");
+}
 
+function addSidebar() {
     addCard2Sidebar(drawBed());
     addCard2Sidebar(drawBox(1, 1, 1));
-    addProperty2SideBar('email', 'hhhh');
-    clearPropertyInSideBar();
-    addProperty2SideBar('email', 'hhhh');
+
+    addProperty2SideBar('number', 'X', {'step': 0.01, 'placeholder': 'NaN'}, (event) => {
+        if(objectSelected) {
+            objectSelected.position.x = event.target.value;
+        }
+        else {
+            alert('No object is selected now!');
+            event.target.value = null;
+        }
+    });
+    addProperty2SideBar('number', 'Y', {'step': 0.01, 'placeholder': 'NaN'}, (event) => {
+        if(objectSelected) {
+            objectSelected.position.y = event.target.value;
+        }
+        else {
+            alert('No object is selected now!');
+            event.target.value = null;
+        }
+    });
+    addProperty2SideBar('number', 'Z', {'step': 0.01, 'placeholder': 'NaN'}, (event) => {
+        if(objectSelected) {
+            objectSelected.position.z = event.target.value;
+        }
+        else {
+            alert('No object is selected now!');
+            event.target.value = null;
+        }
+    });
+    addProperty2SideBar('number', 'Roll', {'step': 0.01, 'placeholder': 'NaN'}, (event) => {
+        if(objectSelected) {
+            objectSelected.rotation.x = event.target.value;
+        }
+        else {
+            alert('No object is selected now!');
+            event.target.value = null;
+        }
+    });
+    addProperty2SideBar('number', 'Pitch', {'step': 0.01, 'placeholder': 'NaN'}, (event) => {
+        if(objectSelected) {
+            objectSelected.rotation.y = event.target.value;
+        }
+        else {
+            alert('No object is selected now!');
+            event.target.value = null;
+        }
+    });
+    addProperty2SideBar('number', 'Yaw', {'step': 0.01, 'placeholder': 'NaN'}, (event) => {
+        if(objectSelected) {
+            objectSelected.rotation.z = event.target.value;
+        }
+        else {
+            alert('No object is selected now!');
+            event.target.value = null;
+        }
+    });
+    addProperty2SideBar('color', 'Color', null, (event)=> {
+        if(objectSelected) {
+            objectSelected.material.color.setStyle(event.target.value);
+        }
+        else {
+            alert('No object is selected now!');
+            event.target.value = '#000000';
+        }
+    });
 }
 
 function resize() {
@@ -291,7 +357,7 @@ function onKeyDown(event) {
         case 69: // e
             if (!FPControl.isLocked) turnright = true;
             break;
-        case 13: // enter
+        case 90: // enter
             zoomToFit(collision_items);
             break;
         default:
@@ -647,7 +713,7 @@ function addCard2Sidebar(obj) {
     img.setAttribute("class", "img-fluid card-img");
     img.setAttribute("style", "height: 100%;");
     card.appendChild(img);
-    card.setAttribute("onclick", "objectToPlace='"+obj.name+"'");
+    card.setAttribute("onclick", "objectToPlace='" + obj.name + "'");
     document.getElementById("tray").appendChild(card);
 
 }
@@ -713,15 +779,26 @@ function changeSidebar(isTray) {
         $("#tray").collapse('show');
         $('#property-panel').collapse('hide');
         $('#switch-sidebar').attr('onclick', "changeSidebar(false);")
-    }
-    else {
+    } else {
         $("#tray").collapse('hide');
         $('#property-panel').collapse('show');
         $('#switch-sidebar').attr('onclick', "changeSidebar(true);")
     }
 }
 
-function addProperty2SideBar(type, name) {
+function selectObject(obj) {
+    objectSelected = obj;
+    $('#X').attr('value', obj.position.x);
+    $('#Y').attr('value', obj.position.y);
+    $('#Z').attr('value', obj.position.z);
+    $('#Roll').attr('value', obj.rotation.x);
+    $('#Pitch').attr('value', obj.rotation.y);
+    $('#Yaw').attr('value', obj.rotation.z);
+    $('#Color').attr('value', '#'+obj.material.color.getHexString());
+    changeSidebar(false);
+}
+
+function addProperty2SideBar(type, name, setting = null, onChange=null) {
     let input = document.createElement('input');
     let label = document.createElement('label');
     label.setAttribute('for', name);
@@ -730,6 +807,15 @@ function addProperty2SideBar(type, name) {
     input.setAttribute('id', name);
     input.setAttribute('class', 'form-control col-9');
     input.setAttribute('type', type);
+    if (setting) {
+        for (let attr in setting) {
+            input.setAttribute(attr, setting[attr]);
+        }
+    }
+    if (onChange) {
+        input.addEventListener('change', onChange);
+
+    }
     let form_row = document.createElement('div');
     form_row.setAttribute('class', 'form-row');
     form_row.appendChild(label);
