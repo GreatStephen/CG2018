@@ -49,17 +49,25 @@ let clock = new THREE.Clock();
 let meshHelper, mixer;
 let reflectionCube, refractionCube;
 
+// mouse detection
+let raycaster4 = new THREE.Raycaster();
+let mouse = new THREE.Vector2();
+let pick_items = [];
+let intersects4;
+
 function main() {
     init();
     buildScene();
     addSidebar();
     selectObject(collision_items[0]);
 
-    console.log("items=" + collision_items.length);
+    //console.log("items=" + collision_items.length);
     // keyboard and mouse events
     renderer.domElement.addEventListener('dblclick', onDoubleClick, false);
     document.addEventListener("webkitfullscreenchange", onFullscreenChange, false);
     window.addEventListener("resize", resize, false);
+    window.addEventListener('mousemove', onMouseMove, false);
+    window.addEventListener("click", onMouseClick, false);
     document.addEventListener("keydown", onKeyDown, false);
     document.addEventListener("keyup", onKeyUp, false);
     // start display
@@ -117,6 +125,7 @@ function buildScene() {
     };
     scene.add(cube);
     collision_items.push(cube);
+    pick_items.push(cube);
 
     // bed
     let bed1 = drawBed();
@@ -124,6 +133,7 @@ function buildScene() {
     [bed1.scale.x, bed1.scale.y, bed1.scale.z] = [0.2, 0.2, 0.2];
     scene.add(bed1);
     collision_items.push(bed1);
+    pick_items.push(bed1);
 
     // the man to be controlled
     man = loadMesh("resources/model/Male02/male02.obj",
@@ -142,6 +152,7 @@ function buildScene() {
     [door.scale.x, door.scale.y, door.scale.z] = [8, 8, 8];
     scene.add(door);
     collision_items.push(door);
+    pick_items.push(door)
 
     let fan = new Fan();
     fan.threegroup.position.y = 5;
@@ -152,6 +163,7 @@ function buildScene() {
     };
     scene.add(fan.threegroup);
     collision_items.push(fan.threegroup);
+    pick_items.push(fan.threegroup);
 
     let gui = new dat.GUI();
     gui.add(speedControl, 'speed', 0, 0.5).name("Speed");
@@ -182,6 +194,7 @@ function buildScene() {
     box1.position.set(-20, 3, 10);
     scene.add(box1);
     collision_items.push(box1);
+    pick_items.push(box1);
 
     let box2 = new THREE.Mesh(
         new THREE.BoxGeometry(6, 6, 6),
@@ -332,19 +345,19 @@ function moveCamera() {
         isCollision = true;
         agentVelocity.x = 0;
         agentVelocity.z = 0;
-        agentVelocity.y = 0;
+        agentVelocity.y -= 9.8 * deltaT * 10.0;
     }
     if (intersects2.length !== 0 && intersects2[0].distance < COLLOSION_DIST) {
         isCollision = true;
         agentVelocity.x = 0;
         agentVelocity.z = 0;
-        agentVelocity.y = 0;
+        agentVelocity.y -= 9.8 * deltaT * 10.0;
     }
     if (intersects3.length !== 0 && intersects3[0].distance < COLLOSION_DIST) {
         isCollision = true;
         agentVelocity.x = 0;
         agentVelocity.z = 0;
-        agentVelocity.y = 0;
+        agentVelocity.y -= 9.8 * deltaT * 10.0;
     }
 
     if (isCollision === false) {
@@ -359,21 +372,48 @@ function moveCamera() {
         if (moveForward || moveBackward) agentVelocity.z -= agentDirection.z * 400.0 * deltaT;
         if (moveLeft || moveRight) agentVelocity.x -= agentDirection.x * 400.0 * deltaT;
 
-        // apply movement
-        FPControl.getObject().translateX(agentVelocity.x * deltaT);
-        FPControl.getObject().translateY(agentVelocity.y * deltaT);
-        FPControl.getObject().translateZ(agentVelocity.z * deltaT);
+    }
 
 
-        // above ground
-        if (FPControl.getObject().position.y < 10) {
-            agentVelocity.y = 0;
-            FPControl.getObject().position.y = 10;
-            canJump = true;
-        }
-        if (!FPControl.isLocked) {
-            FPControl.getObject().rotateY((Number(turnleft) - Number(turnright)) * deltaT * 5);
-        }
+    // apply movement
+    FPControl.getObject().translateX(agentVelocity.x * deltaT);
+    FPControl.getObject().translateY(agentVelocity.y * deltaT);
+    FPControl.getObject().translateZ(agentVelocity.z * deltaT);
+
+
+    // above ground
+    if (FPControl.getObject().position.y < 10) {
+        agentVelocity.y = 0;
+        FPControl.getObject().position.y = 10;
+        canJump = true;
+    }
+    if (!FPControl.isLocked) {
+        FPControl.getObject().rotateY((Number(turnleft) - Number(turnright)) * deltaT * 5);
+    }
+
+    //mouse
+    TPCamera.updateMatrixWorld();
+    raycaster4.setFromCamera(mouse, TPCamera);
+
+    intersects4 = raycaster4.intersectObjects(pick_items, true);
+    // if (intersects4.length != 0) console.log(intersects4[0]);
+
+}
+
+
+// calculate the mouse's coordinates
+function onMouseMove(event) {
+
+    event.preventDefault();
+    mouse.x = ((event.clientX - window.innerWidth / 4.0) / (window.innerWidth * 3.0 / 4.0)) * 2 - 1;
+    mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+
+}
+
+// return intersects4
+function onMouseClick(){
+    if(intersects4.length!=0){
+        selectObject(intersects4[0].object);
     }
 }
 
