@@ -104,16 +104,22 @@ function drawPillar(ball_size, cylinder_height) {
     return pillar;
 }
 
-function drawBox(x, y, z, color = 0x3CB371) {
-    let box = new THREE.Mesh(
-        new THREE.BoxGeometry(x, y, z),
-        new THREE.MeshStandardMaterial({
-            color: color,
+function drawBox(x, y, z, material=0x3CB371) {
+    if(material.isMaterial) {
+
+    }
+    else {
+        material = new THREE.MeshStandardMaterial({
+            color: material,
             flatShading: true,
             metalness: 0,
             roughness: 0.8,
             refractionRatio: 0.25
-        })
+        });
+    }
+    let box = new THREE.Mesh(
+        new THREE.BoxGeometry(x, y, z),
+        material
     );
     box.castShadow = true;
     box.receiveShadow = true;

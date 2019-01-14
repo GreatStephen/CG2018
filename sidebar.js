@@ -76,12 +76,29 @@ function addSidebar() {
     });
     addProperty2SideBar('color', 'Color', null, (event) => {
         if (objectSelected) {
-            objectSelected.material.color.setStyle(event.target.value);
+            if (objectSelected.material.color !== undefined) {
+                objectSelected.material.color.setStyle(event.target.value);
+            } else {
+                alert('You cannot change the color!');
+                event.target.value = '#000000';
+            }
         } else {
             alert('No object is selected now!');
             event.target.value = '#000000';
         }
     });
+    let btn = document.createElement('button');
+    //btn.setAttribute('id', 'Delete');
+    btn.setAttribute('class', 'btn btn-primary');
+    btn.innerText = 'Delete';
+    btn.addEventListener('click', (event) => {
+        scene.remove(objectSelected);
+        selectObject(null)
+    }, false);
+    let form_row = document.createElement('div');
+    form_row.setAttribute('class', 'form-row');
+    form_row.appendChild(btn);
+    document.getElementById('property-panel').appendChild(form_row);
 }
 
 function addCard2Sidebar(createObjFun) {
@@ -93,12 +110,13 @@ function addCard2Sidebar(createObjFun) {
     img.setAttribute("style", "height: 100%;");
     card.appendChild(img);
     clickFun = (event) => {
-        scene.add(createObjFun());
-        console.log('create object');
+        let obj = createObjFun();
+        scene.add(obj);
+        collision_items.push(obj);
+        pick_items.push(obj);
     };
     card.addEventListener('click', clickFun);
     document.getElementById("tray").appendChild(card);
-
 }
 
 function getImage(obj) {
@@ -137,11 +155,9 @@ function changeSidebar(isTray) {
     if (isTray) {
         $("#tray").collapse('show');
         $('#property-panel').collapse('hide');
-        $('#switch-sidebar').attr('onclick', "changeSidebar(false);")
     } else {
         $("#tray").collapse('hide');
         $('#property-panel').collapse('show');
-        $('#switch-sidebar').attr('onclick', "changeSidebar(true);")
     }
 }
 
@@ -154,7 +170,11 @@ function selectObject(obj) {
         $('#Roll').attr('value', obj.rotation.x);
         $('#Pitch').attr('value', obj.rotation.y);
         $('#Yaw').attr('value', obj.rotation.z);
-        $('#Color').attr('value', '#' + obj.material.color.getHexString());
+        if (obj.material.color !== undefined) {
+            $('#Color').attr('value', '#' + obj.material.color.getHexString());
+        } else {
+            $('#Color').attr('value', '#000000');
+        }
         $('#ScaleX').attr('value', obj.scale.x);
         $('#ScaleY').attr('value', obj.scale.y);
         $('#ScaleZ').attr('value', obj.scale.z);

@@ -27,7 +27,6 @@ function main() {
     init();
     buildScene();
     addSidebar();
-    selectObject(collision_items[0]);
     registerEvents();
 
     // start display
@@ -145,35 +144,27 @@ function buildScene() {
     var cubeMaterial2 = new THREE.MeshLambertMaterial({color: 0xffffff, envMap: refractionCube, refractionRatio: 0.95});
     var cubeMaterial1 = new THREE.MeshLambertMaterial({color: 0xffffff, envMap: reflectionCube});
 
-    let box1 = new THREE.Mesh(
-        new THREE.BoxGeometry(6, 6, 6),
-        cubeMaterial1
-    );
+    let box1 = drawBox(6, 6, 6, cubeMaterial1);
     box1.position.set(-20, 3, 10);
     scene.add(box1);
     collision_items.push(box1);
     pick_items.push(box1);
 
-    let box2 = new THREE.Mesh(
-        new THREE.BoxGeometry(6, 6, 6),
-        cubeMaterial2
-    );
+    let box2 = drawBox(6, 6, 6, cubeMaterial2);
     box2.position.set(-20, 3, -10);
     scene.add(box2);
     collision_items.push(box2);
+    pick_items.push(box2);
 
-    let box3 = new THREE.Mesh(
-        new THREE.BoxGeometry(6, 6, 6),
-        cubeMaterial3
-    );
+    let box3 = drawBox(6, 6, 6, cubeMaterial3);
     box3.position.set(-20, 3, 0);
     scene.add(box3);
     collision_items.push(box3);
-
+    pick_items.push(box3);
 
     // point light
     let light = newPointLight(1, 0xffffff);
-    light.position.set(-20, 50, 100);
+    light.position.set(-100, 50, -50);
     scene.add(light);
 
     // ambient light
@@ -186,6 +177,8 @@ function registerEvents() {
     renderer.domElement.addEventListener('dblclick', onDoubleClick, false);
     document.addEventListener("webkitfullscreenchange", onFullscreenChange, false);
     window.addEventListener("onResize", onResize, false);
+    window.addEventListener('mousemove', onMouseMove, false);
+    renderer.domElement.addEventListener("click", onMouseClick, false);
     document.addEventListener("keydown", onKeyDown, false);
     document.addEventListener("keyup", onKeyUp, false);
 }
@@ -233,9 +226,12 @@ function onMouseMove(event) {
 }
 
 // return intersects4
-function onMouseClick() {
+function onMouseClick(event) {
     if (intersects4.length !== 0) {
         selectObject(intersects4[0].object);
+    }
+    else{
+        selectObject(null);
     }
 }
 
