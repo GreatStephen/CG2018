@@ -54,14 +54,8 @@ function main() {
     buildScene();
     addSidebar();
     selectObject(collision_items[0]);
+    registerEvents();
 
-    console.log("items=" + collision_items.length);
-    // keyboard and mouse events
-    renderer.domElement.addEventListener('dblclick', onDoubleClick, false);
-    document.addEventListener("webkitfullscreenchange", onFullscreenChange, false);
-    window.addEventListener("resize", resize, false);
-    document.addEventListener("keydown", onKeyDown, false);
-    document.addEventListener("keyup", onKeyUp, false);
     // start display
     animate();
 }
@@ -272,6 +266,15 @@ function addSidebar() {
     });
 }
 
+function registerEvents() {
+    // keyboard and mouse events
+    renderer.domElement.addEventListener('dblclick', onDoubleClick, false);
+    document.addEventListener("webkitfullscreenchange", onFullscreenChange, false);
+    window.addEventListener("resize", resize, false);
+    document.addEventListener("keydown", onKeyDown, false);
+    document.addEventListener("keyup", onKeyUp, false);
+}
+
 function resize() {
     if (!document.webkitIsFullScreen) {
         // camera
@@ -310,7 +313,6 @@ function moveCamera() {
     let time = performance.now();
     let deltaT = (time - prevTime) / 1000.0;
     prevTime = time;
-
 
     // collision detection
     movedirection.x = Number(moveRight) - Number(moveLeft);
@@ -406,7 +408,7 @@ function onKeyDown(event) {
         case 69: // e
             if (!FPControl.isLocked) turnright = true;
             break;
-        case 90: // enter
+        case 90: // z
             zoomToFit(collision_items);
             break;
         default:
