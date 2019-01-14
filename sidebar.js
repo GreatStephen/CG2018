@@ -112,6 +112,7 @@ function addCard2Sidebar(createObjFun) {
     clickFun = (event) => {
         let obj = createObjFun();
         scene.add(obj);
+        objectToPlace = obj;
         collision_items.push(obj);
         pick_items.push(obj);
     };
