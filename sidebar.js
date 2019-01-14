@@ -171,9 +171,9 @@ function selectObject(obj) {
         $('#Pitch').attr('value', obj.rotation.y);
         $('#Yaw').attr('value', obj.rotation.z);
         if (obj.material.color !== undefined) {
-            $('#Color').attr('value', '#' + obj.material.color.getHexString());
+            document.getElementById('Color').value = '#'+obj.material.color.getHexString();
         } else {
-            $('#Color').attr('value', '#000000');
+            document.getElementById('Color').value = '#ffffff';
         }
         $('#ScaleX').attr('value', obj.scale.x);
         $('#ScaleY').attr('value', obj.scale.y);
