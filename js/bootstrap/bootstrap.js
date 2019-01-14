@@ -1938,7 +1938,7 @@
       SHOW: "show" + EVENT_KEY,
       SHOWN: "shown" + EVENT_KEY,
       FOCUSIN: "focusin" + EVENT_KEY,
-      RESIZE: "resize" + EVENT_KEY,
+      RESIZE: "onResize" + EVENT_KEY,
       CLICK_DISMISS: "click.dismiss" + EVENT_KEY,
       KEYDOWN_DISMISS: "keydown.dismiss" + EVENT_KEY,
       MOUSEUP_DISMISS: "mouseup.dismiss" + EVENT_KEY,

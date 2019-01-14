@@ -1042,7 +1042,7 @@ function attachToScrollParents(scrollParent, event, callback, scrollParents) {
 function setupEventListeners(reference, options, state, updateBound) {
   // Resize event listener on window
   state.updateBound = updateBound;
-  getWindow(reference).addEventListener('resize', state.updateBound, { passive: true });
+  getWindow(reference).addEventListener('onResize', state.updateBound, { passive: true });
 
   // Scroll event listener on scroll parents
   var scrollElement = getScrollParent(reference);
@@ -1054,7 +1054,7 @@ function setupEventListeners(reference, options, state, updateBound) {
 }
 
 /**
- * It will add resize/scroll events and start recalculating
+ * It will add onResize/scroll events and start recalculating
  * position of the popper element when they are triggered.
  * @method
  * @memberof Popper
@@ -1072,8 +1072,8 @@ function enableEventListeners() {
  * @private
  */
 function removeEventListeners(reference, state) {
-  // Remove resize event listener on window
-  getWindow(reference).removeEventListener('resize', state.updateBound);
+  // Remove onResize event listener on window
+  getWindow(reference).removeEventListener('onResize', state.updateBound);
 
   // Remove scroll event listener on scroll parents
   state.scrollParents.forEach(function (target) {
@@ -1089,7 +1089,7 @@ function removeEventListeners(reference, state) {
 }
 
 /**
- * It will remove resize/scroll events and won't recalculate popper position
+ * It will remove onResize/scroll events and won't recalculate popper position
  * when they are triggered. It also won't trigger `onUpdate` callback anymore,
  * unless you call `update` method manually.
  * @method
@@ -2371,7 +2371,7 @@ var Defaults = {
   positionFixed: false,
 
   /**
-   * Whether events (resize, scroll) are initially enabled.
+   * Whether events (onResize, scroll) are initially enabled.
    * @prop {Boolean} eventsEnabled=true
    */
   eventsEnabled: true,

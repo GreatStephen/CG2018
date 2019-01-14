@@ -21,7 +21,7 @@
  *	4) Render the shadow map viewer in your render loop:
  *		shadowMapViewer.render( renderer );
  *
- *	5) Optionally: Update the shadow map viewer on window resize:
+ *	5) Optionally: Update the shadow map viewer on window onResize:
  *		shadowMapViewer.updateForWindowResize();
  *
  *	6) If you set the position or size members directly, you need to call shadowMapViewer.update();
