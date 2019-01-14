@@ -4,7 +4,7 @@
 let scene = new THREE.Scene(),
     FPCamera = new THREE.PerspectiveCamera(50, 1, 0.01, 10000),    // first-person camera
     TPCamera = new THREE.PerspectiveCamera(75, 1, 0.01, 10000),   // third-person camera
-    renderer = new THREE.WebGLRenderer(),
+    renderer = new THREE.WebGLRenderer({antialias: true, alpha: true}),
     TPControl = new THREE.OrbitControls(TPCamera, document.getElementById("canvas-frame")),     // third-person camera is controlled with orbit control
     FPControl = new THREE.PointerLockControls(FPCamera),   // controlled with first-person control
     camera = TPCamera;    // camera to be displayed
