@@ -92,7 +92,7 @@ function addSidebar() {
     btn.setAttribute('class', 'btn btn-primary');
     btn.innerText = 'Delete';
     btn.addEventListener('click', (event) => {
-        scene.remove(objectSelected);
+        objectSelected.parent.remove(objectSelected);
         selectObject(null)
     }, false);
     let form_row = document.createElement('div');
