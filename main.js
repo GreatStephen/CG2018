@@ -267,9 +267,42 @@ function onKeyDown(event) {
         case 90: // z
             zoomToFit(collision_items);
             break;
+        case 80: // p
+            renderer.render(scene, camera);
+            document.getElementById('screenshoot').setAttribute('src', renderer.domElement.toDataURL());
+            $('#screenshootModal').modal('show');
+            break;
         default:
             break;
     }
+}
+
+function base64Img2Blob(code){
+    var parts = code.split(';base64,');
+    var contentType = parts[0].split(':')[1];
+    var raw = window.atob(parts[1]);
+    var rawLength = raw.length;
+
+    var uInt8Array = new Uint8Array(rawLength);
+
+    for (var i = 0; i < rawLength; ++i) {
+        uInt8Array[i] = raw.charCodeAt(i);
+    }
+
+    return new Blob([uInt8Array], {type: contentType});
+}
+
+function downloadFile(fileName, content){
+
+    var aLink = document.createElement('a');
+    var blob = base64Img2Blob(content); //new Blob([content]);
+
+    var evt = document.createEvent("HTMLEvents");
+    evt.initEvent("click", false, false);//initEvent 不加后两个参数在FF下会报错
+    aLink.download = fileName;
+    aLink.href = URL.createObjectURL(blob);
+
+    aLink.dispatchEvent(evt);
 }
 
 function onKeyUp(event) {
