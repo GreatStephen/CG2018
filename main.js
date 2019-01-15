@@ -17,11 +17,8 @@ let clock = new THREE.Clock();
 
 let reflectionCube, refractionCube;
 
-// mouse detection
-let raycaster4 = new THREE.Raycaster();
-let mouse = new THREE.Vector2();
-let pick_items = [];
-let intersects4;
+let pointlight;
+let pointlightx=-100, pointlightz=-50;
 
 function main() {
     init();
@@ -163,12 +160,12 @@ function buildScene() {
     pick_items.push(box3);
 
     // point light
-    let light = newPointLight(1, 0xffffff);
-    light.position.set(-100, 50, -50);
-    scene.add(light);
+    pointlight = newPointLight(1, 0xffffff);
+    pointlight.position.set(pointlightx, 50, pointlightz);
+    scene.add(pointlight);
 
     // ambient light
-    light = newAmbientLight(0.2, 0xffffff);
+    let light = newAmbientLight(0.2, 0xffffff);
     scene.add(light);
 }
 
@@ -239,18 +236,30 @@ function onMouseClick(event) {
 function onKeyDown(event) {
     switch (event.keyCode) {
         case 38: // up
+            pointlightx +=0.1;
+            pointlight.position.set(pointlightx, 50, pointlightz);
+            break;
         case 87: // w
             moveForward = true;
             break;
         case 37: // left
+            pointlightz +=0.1;
+            pointlight.position.set(pointlightx, 50, pointlightz);
+            break;
         case 65: // a
             moveLeft = true;
             break;
         case 40: // down
+            pointlightx -=0.1;
+            pointlight.position.set(pointlightx, 50, pointlightz);
+            break;
         case 83: // s
             moveBackward = true;
             break;
         case 39: // right
+            pointlightz -=0.1;
+            pointlight.position.set(pointlightx, 50, pointlightz);
+            break;
         case 68: // d
             moveRight = true;
             break;
@@ -271,6 +280,12 @@ function onKeyDown(event) {
             renderer.render(scene, camera);
             document.getElementById('screenshoot').setAttribute('src', renderer.domElement.toDataURL());
             $('#screenshootModal').modal('show');
+            break;
+        case 73: // i
+            pointlight.intensity += 0.2;
+            break;
+        case 75: // k
+            pointlight.intensity -= 0.2;
             break;
         default:
             break;

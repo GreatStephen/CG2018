@@ -21,6 +21,13 @@ let moveForward = false,
     canJump = false,
     movedirection = new THREE.Vector3();// variables for movement control
 
+// mouse detection
+let raycaster4 = new THREE.Raycaster();
+let mouse = new THREE.Vector2();
+let pick_items = [];
+let intersects4;
+
+
 function moveCamera() {
     let deltaT = clock.getDelta();
 
