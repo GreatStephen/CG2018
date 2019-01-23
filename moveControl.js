@@ -47,6 +47,7 @@ function moveCamera() {
         intersects2 = raycaster2.intersectObjects(collision_items, true),
         intersects3 = raycaster3.intersectObjects(collision_items, true);
 
+    //if(intersects1.length!=0) console.log(intersects1);
     if (intersects1.length !== 0 && intersects1[0].distance < COLLOSION_DIST) {
         isCollision = true;
         agentVelocity.x = 0;
